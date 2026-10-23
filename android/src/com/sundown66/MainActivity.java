@@ -16,6 +16,7 @@ import android.view.WindowManager;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.webkit.ValueCallback;
 import android.webkit.WebViewClient;
 
 public class MainActivity extends Activity implements SensorEventListener {
@@ -66,6 +67,17 @@ public class MainActivity extends Activity implements SensorEventListener {
         int ang = rot == Surface.ROTATION_90 ? 90 : rot == Surface.ROTATION_180 ? 180 : rot == Surface.ROTATION_270 ? 270 : 0;
         String js = "window.__nativeTilt&&window.__nativeTilt(" + e.values[0] + "," + e.values[1] + "," + ang + ")";
         web.evaluateJavascript(js, null);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (!pageReady) { super.onBackPressed(); return; }
+        web.evaluateJavascript("window.__back?window.__back():'exit'", new ValueCallback<String>() {
+            @Override
+            public void onReceiveValue(String v) {
+                if (v != null && v.contains("exit")) finish();
+            }
+        });
     }
 
     @Override

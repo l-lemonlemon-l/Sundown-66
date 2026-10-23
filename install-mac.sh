@@ -1,10 +1,10 @@
 #!/bin/bash
 # Installs Sundown 66 on a Mac with no "damaged" or "unverified developer" warnings.
 # Paste into Terminal:
-#   curl -fsSL https://raw.githubusercontent.com/l-lemonlemon-l/sundown-66/main/install-mac.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/l-lemonlemon-l/Sundown-66/main/install-mac.sh | bash
 set -euo pipefail
 if [ "$(uname -m)" = "arm64" ]; then ZIP=Sundown66-Mac-AppleSilicon.zip; else ZIP=Sundown66-Mac-Intel.zip; fi
-URL="https://github.com/l-lemonlemon-l/sundown-66/releases/latest/download/$ZIP"
+URL="https://github.com/l-lemonlemon-l/Sundown-66/releases/latest/download/$ZIP"
 TMP="$(mktemp -d)"
 echo "Downloading $ZIP"
 curl -fL --progress-bar "$URL" -o "$TMP/s66.zip"

@@ -13,7 +13,7 @@ Pick a car and paint in the garage, gear up in the armory with a main gun and a 
 - **Mac:** paste this into Terminal. It picks Apple Silicon or Intel, installs to Applications and opens the game, with no security warnings:
 
   ```
-  curl -fsSL https://raw.githubusercontent.com/l-lemonlemon-l/sundown-66/main/install-mac.sh | bash
+  curl -fsSL https://raw.githubusercontent.com/l-lemonlemon-l/Sundown-66/main/install-mac.sh | bash
   ```
 
   If you download the zip in a browser instead, macOS may call the app damaged. Fix it with `xattr -cr "/Applications/Sundown 66.app"`, or see Releases below for the fully signed option.

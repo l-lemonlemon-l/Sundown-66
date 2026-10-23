@@ -177,9 +177,9 @@ body{
 
   <footer class="plate">
     <dl>
-      <div><dt>DRIVE</dt><dd>Arrows or WASD. Space or Enter to start. B or Shift uses a boost. You carry three, and they refill every third town. C buys gas ($6 for a fifth of a tank). R changes the radio. F for full screen.</dd></div>
+      <div><dt>DRIVE</dt><dd>Arrows or WASD. Space or Enter to start. Esc quits the run or leaves the race, after asking. B or Shift uses a boost. You carry three, and they refill every third town. C buys gas ($6 for a fifth of a tank). R changes the radio. F for full screen.</dd></div>
       <div><dt>SHOOT</dt><dd>Aim with the mouse, press E or click to fire at a cop's rear tires. Q swaps between your main gun and sidearm. On touch, FIRE aims for you and tapping the gun panel swaps.</dd></div>
-      <div><dt>TOUCH</dt><dd>Hold to gas, let go to brake, tilt to steer. Double-tap to boost, swipe down to buy gas, two-finger tap for the radio. The crosshair aims and fires by itself.</dd></div>
+      <div><dt>TOUCH</dt><dd>Hold to gas, let go to brake, tilt to steer. Double-tap to boost, swipe down to buy gas, two-finger tap for the radio, three-finger tap (or the Android back button) to quit. The crosshair aims and fires by itself.</dd></div>
       <div><dt>RACE FRIENDS</dt><dd>Pick Race Friends after the title. Host a race to get a 4-letter room code, or join with a friend's code. The host picks the state: Illinois, Missouri, Kansas, Oklahoma, Texas, New Mexico, Arizona or California. Top finishers win cash.</dd></div>
       <div><dt>GARAGE AND ARMORY</dt><dd>Shopping happens before a run. P opens car parts in the garage. In the armory pick a main gun and a sidearm and press M for gun mods. Your cash and everything you buy carry over between runs.</dd></div>
     </dl>
@@ -807,6 +807,7 @@ function update(dt){
   if(state==='pullin'){pull.t+=dt;if(pull.t>4.6)endPullin();return;}
   if(state==='pump'){pump.t+=dt;const p=clamp(pump.t/pump.dur,0,1);fuel=lerp(pump.from,pump.to,p);const g=Math.floor(pump.gal*p);if(g>pump.last){pump.last=g;dingSnd();}if(pump.t>pump.dur+2.2)endPump();return;}
   if(state==='pit'||state==='shop'||state==='gunshop'){bannerT-=dt;return;}
+  if(quitAsk&&state==='play'&&!mp.active)return;
   const pSeg=findSeg(position+playerZ);
   const pW=PN[1].w*SCALE;
   const sp=speed/maxSpeed,dx=dt*2*sp;
@@ -820,6 +821,7 @@ function update(dt){
     if(keys.left)steerAmt=-1;else if(keys.right)steerAmt=1;
     if(keys.gas&&fuel>0)G=true;if(keys.brake)B=true;
   }else if(MENU_BG[state]){steerAmt=autopilot(pSeg);G=speed<maxSpeed*0.72;}
+  if(state==='play'&&quitAsk){G=false;B=false;steerAmt=0;}
   if(state==='play'&&mp.active){if(mp.count>0){G=false;B=true;steerAmt=0;}else if(mp.fin!=null){steerAmt=autopilot(pSeg);G=true;B=false;}}
   steerVis=steerAmt<-0.3?-1:steerAmt>0.3?1:0;brakingNow=B&&speed>0;
   if(rivalOn)rivalAI(dt);
@@ -1327,6 +1329,38 @@ function drawTags(){
     ctx.fillStyle='rgba(22,12,9,0.75)';ctx.fillRect(x,y,w,8);ctx.fillStyle='#f2b631';ctx.fillRect(x,y+8,w,1);txt(g.n,x+3,y+2,1,'#f6e3b4',null,false);}
 }
 
+/* ---------- quit prompt: Esc, Android back, three-finger tap ---------- */
+let quitAsk=null;
+const QUIT_BOX=[[56,118,96,22],[168,118,96,22]];
+function openQuit(){if(state!=='play'||quitAsk)return;quitAsk={sel:1};for(const k in keys)keys[k]=false;fireHeld=false;activePtrs.clear();refreshTouch();beep(520);}
+function closeQuit(){quitAsk=null;beep(660);}
+function doQuit(){
+  quitAsk=null;
+  if(mp.active){netLeave();state='lobby';lobby.view='choose';lobby.sel=0;lobbyMsg('YOU LEFT THE RACE');}
+  else{saveBest();saveShop();removeCop();removeRival();clearPeds();state='title';overT=0;}
+  sadTune();
+}
+function quitMenu(a){if(a==='left'||a==='right'||a==='up'||a==='down'){quitAsk.sel=1-quitAsk.sel;beep(880);}else if(a==='ok'){if(quitAsk.sel===0)doQuit();else closeQuit();}else if(a==='back')closeQuit();}
+function drawQuit(blink){
+  ctx.fillStyle='rgba(10,6,4,0.72)';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='rgba(22,12,9,0.95)';ctx.fillRect(40,46,240,108);ctx.fillStyle='#f2b631';ctx.fillRect(40,46,240,2);ctx.fillStyle='#e8641b';ctx.fillRect(40,48,240,2);ctx.fillStyle='#b8401c';ctx.fillRect(40,50,240,2);
+  txt(mp.active?'LEAVE THE RACE':'QUIT THIS RUN',W/2,60,1,'#cfc2a4','c');
+  txt('ARE YOU SURE',W/2,72,3,'#f6e3b4','c','#b8401c');
+  txt('YOU CANT UNDO THIS',W/2,96,1,'#ff8a5a','c');
+  [mp.active?'YES, LEAVE':'YES, QUIT','NO, KEEP GOING'].forEach((l,i)=>{const b=QUIT_BOX[i],on=quitAsk.sel===i;
+    ctx.fillStyle=on?(i===0?'rgba(200,32,43,0.35)':'rgba(242,182,49,0.2)'):'rgba(255,255,255,0.04)';ctx.fillRect(b[0],b[1],b[2],b[3]);
+    ctx.fillStyle=on?(i===0?'#ff5a4a':'#f2b631'):'#5a3a20';ctx.fillRect(b[0],b[1],b[2],1);ctx.fillRect(b[0],b[1]+b[3]-1,b[2],1);ctx.fillRect(b[0],b[1],1,b[3]);ctx.fillRect(b[0]+b[2]-1,b[1],1,b[3]);
+    txt(l,b[0]+b[2]/2,b[1]+8,1,on?(i===0?'#ff8a7a':'#f2b631'):'#cfc2a4','c');});
+  if(mp.active)txt('THE RACE KEEPS GOING WHILE THIS IS OPEN',W/2,146,1,'#8a7a64','c');
+}
+/* Android back button: the app calls this; returns 'exit' when the app should close */
+window.__back=function(){
+  if(quitAsk){closeQuit();return'';}
+  if(state==='play'){openQuit();return'';}
+  if(state==='title')return'exit';
+  if(state==='over'||state==='win'){state='title';return'';}
+  menu('back');return'';
+};
 /* ---------- render: road ---------- */
 function project(p,cx,cy,cz){p.camera.x=(p.world.x||0)-cx;p.camera.y=p.world.y-cy;p.camera.z=p.world.z-cz;
   p.screen.scale=cameraDepth/p.camera.z;p.screen.x=W/2+p.screen.scale*p.camera.x*W/2;p.screen.y=H/2-p.screen.scale*p.camera.y*H/2;p.screen.w=p.screen.scale*roadWidth*W/2;}
@@ -1491,9 +1525,11 @@ function hud(){
     if(blink)txt(touchDrive?'TAP TO START':'PRESS START',W/2,104,2,'#f2b631','c');
     txt('ROAD TRIP OR RACE FRIENDS ONLINE',W/2,86,1,'#8ab0ff','c');
     txt('BEST '+pad(best,4)+' MI     WALLET $'+Math.floor(cash),W/2,126,1,'#f6e3b4','c');
-    if(touchDrive){txt('TILT TO STEER   HOLD TO GAS   LET GO TO BRAKE',W/2,136,1,'#f6e3b4','c');txt('DOUBLE TAP BOOST   SWIPE DOWN BUY GAS',W/2,145,1,'#f6e3b4','c');txt('TWO FINGER TAP RADIO',W/2,154,1,'#f6e3b4','c');}
-    else txt('B BOOST   C GAS   Q SWAP   R RADIO',W/2,136,1,'#f6e3b4','c');
+    if(touchDrive){txt('TILT TO STEER   HOLD TO GAS   LET GO TO BRAKE',W/2,136,1,'#f6e3b4','c');txt('DOUBLE TAP BOOST   SWIPE DOWN BUY GAS',W/2,145,1,'#f6e3b4','c');txt('TWO FINGER TAP RADIO   THREE FINGER TAP QUIT',W/2,154,1,'#f6e3b4','c');}
+    else txt('B BOOST   C GAS   Q SWAP   R RADIO   ESC QUIT',W/2,136,1,'#f6e3b4','c');
   }
+  if(state==='play'&&quitAsk)drawQuit(blink);
+  if(state!=='play')quitAsk=null;
   if(state==='mode')drawMode(blink);
   if(state==='lobby')drawLobby(blink);
   if(state==='mpresult')drawResults(blink);
@@ -2079,6 +2115,10 @@ function cycleRadio(){
 /* ---------- input: keyboard ---------- */
 const KEYMAP={ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',ArrowUp:'gas',KeyW:'gas',ArrowDown:'brake',KeyS:'brake'};
 window.addEventListener('keydown',e=>{
+  if(quitAsk&&state==='play'){e.preventDefault();if(e.repeat)return;
+    const a={ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',Enter:'ok',Space:'ok',Escape:'back',Backspace:'back'}[e.code];
+    if(a)quitMenu(a);return;}
+  if(e.code==='Escape'&&state==='play'){e.preventDefault();if(!e.repeat)openQuit();return;}
   if(state==='lobby'&&lobby.view==='join'){if(/^Key[A-Z]$/.test(e.code)){e.preventDefault();joinType(e.code.slice(3));return;}if(e.code==='Backspace'){e.preventDefault();if(lobby.typed)joinDel();else mpMenu('back');return;}}
   if(e.code==='Escape'&&isFull()&&!document.body.classList.contains('app')&&(state==='title'||state==='play'||state==='over'||state==='win')){setFull(false);return;}
   if(e.code==='KeyR'){cycleRadio();return;}
@@ -2111,10 +2151,14 @@ screenEl.addEventListener('pointerdown',e=>{
   const p=canvasPoint(e),px=p.x*W,py=p.y*H;
   if(e.pointerType==='touch'||e.pointerType==='pen')touchDrive=true;
   requestTilt();
+  if(state==='play'&&quitAsk){
+    for(let i=0;i<2;i++){const b=QUIT_BOX[i];if(px>=b[0]&&px<=b[0]+b[2]&&py>=b[1]&&py<=b[1]+b[3]){quitAsk.sel=i;quitMenu('ok');return;}}
+    return;}
   if(state==='play'){
     if(e.pointerType!=='mouse'){
       const now=performance.now();
-      if(activePtrs.size>=1){cycleRadio();}
+      if(activePtrs.size>=2){clearTimeout(radioWait);radioWait=0;openQuit();return;}
+      if(activePtrs.size>=1){clearTimeout(radioWait);radioWait=setTimeout(()=>{radioWait=0;if(state==='play'&&!quitAsk)cycleRadio();},260);}
       else if(now-lastTap.t<300&&Math.hypot(px-lastTap.x,py-lastTap.y)<40){useBoost();lastTap.t=0;}
       else lastTap={t:now,x:px,y:py};
       swipe.set(e.pointerId,{x:px,y:py,t:now});
@@ -2148,7 +2192,7 @@ screenEl.addEventListener('pointerdown',e=>{
     if(i>=0&&i<PARTS.length){if(shop.sel===i||e.pointerType==='mouse'){shop.sel=i;shopBuy();}else{shop.sel=i;beep(880);}}return;}
   startRun();
 });
-let lastTap={t:0,x:0,y:0};const swipe=new Map();
+let lastTap={t:0,x:0,y:0},radioWait=0;const swipe=new Map();
 function ptrUp(e){if(e.pointerType==='mouse')fireHeld=false;
   const sw=swipe.get(e.pointerId);if(sw){swipe.delete(e.pointerId);if(state==='play'&&e.type==='pointerup'){const p=canvasPoint(e),dy=p.y*H-sw.y,dx=p.x*W-sw.x;if(dy>28&&Math.abs(dy)>Math.abs(dx)*1.5&&performance.now()-sw.t<500)buyGas();}}if(activePtrs.has(e.pointerId)){activePtrs.delete(e.pointerId);refreshTouch();}}
 screenEl.addEventListener('pointermove',e=>{

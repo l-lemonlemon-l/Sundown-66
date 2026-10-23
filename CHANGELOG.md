@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.4.2 (2026-10-23)
+
+- Quit with confirmation. Esc (keyboard), the Android back button, or a three-finger tap (touch) opens "ARE YOU SURE / YOU CANT UNDO THIS".
+  - Road Trip: the run pauses while the question is open. Yes, quit returns to the title; cash and parts you already earned are kept.
+  - Race Friends: the race keeps going for everyone else. Yes, leave takes you out of the race and the room.
+- Android back button steps back through menus and closes the app from the title screen.
+- Repo renamed to Sundown-66; install script and links updated.
+
 ## 1.4.1 (2026-10-23)
 
 - Fixed macOS calling the app "damaged". Mac builds are now made on a real Mac by GitHub Actions and signed there (`desktop/build-mac.js`), instead of being packaged on Linux where they cannot be signed.
