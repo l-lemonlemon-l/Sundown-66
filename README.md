@@ -6,8 +6,16 @@ Pick a car and paint in the garage, gear up in the armory with a main gun and a 
 
 ## Play
 
-- **Browser:** open `index.html`, or turn on GitHub Pages for this repo and play at the Pages link.
-- **Android:** install `Sundown66.apk` from the latest release. Tilt to steer, hold the screen to gas, let go to brake. The crosshair aims and fires on its own.
+- **Web:** open `index.html` in a browser, or turn on GitHub Pages for this repo and play at the Pages link.
+- **Windows:** unzip `Sundown66-Windows.zip` and run `Sundown 66.exe`.
+- **Mac:** unzip the Apple Silicon or Intel zip and open `Sundown 66.app`. The first time, right-click it and choose Open.
+- **Android:** install `Sundown66-Android.apk`.
+
+Every version goes full screen when you start, with no on-screen buttons.
+
+## Controls (touch)
+
+Hold to gas, let go to brake, tilt to steer. Double-tap to boost, swipe down to buy gas, two-finger tap for the radio. The crosshair aims and fires by itself. The tilt setting is at the top-left of the garage screen.
 
 ## Controls (keyboard)
 
@@ -21,18 +29,29 @@ Pick a car and paint in the garage, gear up in the armory with a main gun and a 
 | C | Buy gas ($6) |
 | P / M | Car parts / gun mods (garage and armory) |
 | R | Radio |
-| F | Full screen |
+| Esc | Leave full screen (web), quit from the title (desktop) |
 
-## Build the APK
+## Build the Android app
 
 ```
 cd android
 ./build.sh
 ```
 
-The script needs `aapt`, `apksigner`, `zipalign`, `dalvik-exchange`, `android-sdk-platform-23` and a JDK. It wraps `index.html` in a full-screen WebView app that targets Android 15.
+Needs `aapt`, `apksigner`, `zipalign`, `dalvik-exchange`, `android-sdk-platform-23` and a JDK. It wraps `index.html` in a full-screen WebView app that targets Android 15.
+
+## Build the desktop apps
+
+```
+cd desktop
+./build.sh
+```
+
+Needs Node.js. Produces Windows (x64) and Mac (Apple Silicon and Intel) apps in `desktop/dist/`.
 
 ## Layout
 
 - `index.html` is the whole game in one file: HTML, CSS and JavaScript, no dependencies.
 - `android/` holds the WebView wrapper, its manifest, icon and build script.
+- `desktop/` holds the Electron wrapper for Windows and Mac and its build script.
+- `CHANGELOG.md` lists what changed in each version.

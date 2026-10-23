@@ -57,6 +57,7 @@ body{
   background:repeating-linear-gradient(0deg,rgba(0,0,0,.2) 0 1px,transparent 1px 3px),radial-gradient(120% 120% at 50% 50%,transparent 62%,rgba(0,0,0,.5) 100%);
 }
 .fs-ui,.fs-fire,.fs-boost,.rotate{display:none}
+.fs-ui,.fs-fire,.fs-boost{display:none!important}
 .screen.full .fs-boost{
   display:grid;place-items:center;position:absolute;z-index:2;
   right:max(18px,env(safe-area-inset-right,0px));top:50%;margin-top:-42px;
@@ -178,7 +179,7 @@ body{
     <dl>
       <div><dt>DRIVE</dt><dd>Arrows or WASD. Space or Enter to start. B or Shift uses a boost. You carry three, and they refill every third town. C buys gas ($6 for a fifth of a tank). R changes the radio. F for full screen.</dd></div>
       <div><dt>SHOOT</dt><dd>Aim with the mouse, press E or click to fire at a cop's rear tires. Q swaps between your main gun and sidearm. On touch, FIRE aims for you and tapping the gun panel swaps.</dd></div>
-      <div><dt>TOUCH</dt><dd>Hold the screen to gas, let go to brake. Hold left or right of center to steer, or tilt where tilt is allowed.</dd></div>
+      <div><dt>TOUCH</dt><dd>Hold to gas, let go to brake, tilt to steer. Double-tap to boost, swipe down to buy gas, two-finger tap for the radio. The crosshair aims and fires by itself.</dd></div>
       <div><dt>GARAGE AND ARMORY</dt><dd>Shopping happens before a run. P opens car parts in the garage. In the armory pick a main gun and a sidearm and press M for gun mods. Your cash and everything you buy carry over between runs.</dd></div>
     </dl>
     <div class="coin" aria-hidden="true"><span class="slot"><i></i></span>25&cent; PLAY</div>
@@ -665,6 +666,7 @@ function banner(a,b,c){bannerA=a;bannerB=b;bannerC=c;bannerT=3.2;}
 function showToast(s){toast=s;toastT=1.4;}
 function saveBest(){if(miles>best){best=miles;store('sundown66-best',String(Math.floor(best)));}}
 function startRun(){
+  if(!isFull())setFull(true);
   if(state!=='title'&&state!=='over'&&state!=='win')return;
   if((state==='over'||state==='win')&&overT<0.8)return;
   initAudio();if(actx&&actx.state==='suspended')actx.resume();
@@ -845,6 +847,7 @@ function update(dt){
       const g=gunStats(curGun()),bx=tireBoxes(g.pad),inRange=bx.length&&copRect&&copRect.w>=30;
       let tx=W/2,ty=HZ+24;if(inRange){const b=bx[0];tx=b.x+b.w/2;ty=b.y+b.h/2;}
       const k=Math.min(1,dt*(inRange?12:4));aimX+=(tx-aimX)*k;aimY+=(ty-aimY)*k;
+      const other=gunSlot==='main'?'side':'main';if(reloadT[gunSlot]>0&&reloadT[other]<=0&&ammo[other]>0)gunSlot=other;
       autoLock=!!inRange&&Math.hypot(tx-aimX,ty-aimY)<3;
       if(autoLock)fire(true);
     }else autoLock=false;
@@ -1105,7 +1108,8 @@ function hud(){
     txt('CHICAGO TO SANTA MONICA',W/2,70,1,'#f6e3b4','c');
     if(blink)txt(touchDrive?'TAP TO START':'PRESS START',W/2,104,2,'#f2b631','c');
     txt('BEST '+pad(best,4)+' MI     WALLET $'+Math.floor(cash),W/2,126,1,'#f6e3b4','c');
-    txt(touchDrive?'TILT TO STEER   HOLD TO GAS':'R RADIO   F FULL SCREEN',W/2,136,1,'#f6e3b4','c');
+    if(touchDrive){txt('TILT TO STEER   HOLD TO GAS   LET GO TO BRAKE',W/2,136,1,'#f6e3b4','c');txt('DOUBLE TAP BOOST   SWIPE DOWN BUY GAS',W/2,145,1,'#f6e3b4','c');txt('TWO FINGER TAP RADIO',W/2,154,1,'#f6e3b4','c');}
+    else txt('B BOOST   C GAS   Q SWAP   R RADIO',W/2,136,1,'#f6e3b4','c');
   }
   if(state==='garage')drawGarage(blink);
   if(state==='armory')drawArmory(blink);
@@ -1123,6 +1127,7 @@ function drawGarage(blink){
   ctx.fillStyle='rgba(22,12,9,0.8)';ctx.fillRect(0,0,W,H);
   ctx.fillStyle='#f2b631';ctx.fillRect(0,0,W,3);ctx.fillStyle='#e8641b';ctx.fillRect(0,3,W,3);ctx.fillStyle='#b8401c';ctx.fillRect(0,6,W,3);
   txt('$'+Math.floor(cash),8,14,1,'#f2b631');
+  if(touchDrive)txt(['TILT: ON','TILT: FLIP','TILT: OFF'][tiltMode],8,22,1,'#8ab0ff');
   plate(W-62,11,56,13);txt(touchDrive?'PARTS':'P  PARTS',W-34,15,1,'#f6e3b4','c');
   txt('GARAGE',W/2,14,2,'#f6e3b4','c');
   const m=MODELS[garage.m];
@@ -1688,6 +1693,7 @@ function cycleRadio(){
 /* ---------- input: keyboard ---------- */
 const KEYMAP={ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',ArrowUp:'gas',KeyW:'gas',ArrowDown:'brake',KeyS:'brake'};
 window.addEventListener('keydown',e=>{
+  if(e.code==='Escape'&&isFull()&&!document.body.classList.contains('app')&&(state==='title'||state==='play'||state==='over'||state==='win')){setFull(false);return;}
   if(e.code==='KeyR'){cycleRadio();return;}
   if(e.code==='KeyF'){toggleFull();return;}
   if(e.code==='KeyE'){if(state==='play'){e.preventDefault();if(!e.repeat){fireHeld=true;fireHeldAuto=false;fire(false);}}return;}
@@ -1719,7 +1725,13 @@ screenEl.addEventListener('pointerdown',e=>{
   if(e.pointerType==='touch'||e.pointerType==='pen')touchDrive=true;
   requestTilt();
   if(state==='play'){
-    if(px>W-86&&py>H-40&&py<H-18){swapGun();return;}
+    if(e.pointerType!=='mouse'){
+      const now=performance.now();
+      if(activePtrs.size>=1){cycleRadio();}
+      else if(now-lastTap.t<300&&Math.hypot(px-lastTap.x,py-lastTap.y)<40){useBoost();lastTap.t=0;}
+      else lastTap={t:now,x:px,y:py};
+      swipe.set(e.pointerId,{x:px,y:py,t:now});
+    }
     if(e.pointerType==='mouse'){aimX=px;aimY=py;mouseAim=true;fireHeld=true;fireHeldAuto=false;fire(false);try{screenEl.setPointerCapture(e.pointerId);}catch(_){}return;}
     activePtrs.set(e.pointerId,p);refreshTouch();try{screenEl.setPointerCapture(e.pointerId);}catch(_){}return;}
   if(state==='cut'){endCut();return;}
@@ -1727,6 +1739,7 @@ screenEl.addEventListener('pointerdown',e=>{
   if(state==='pump'){endPump();return;}
   if(state==='garage'){
     if(py<26&&px>W-66){openShop('garage');return;}
+    if(py<30&&px<80){cycleTilt();return;}
     if(py>=128&&py<=144){const i=Math.floor((px-(W/2-PAINTS.length*7)+2)/14);if(i>=0&&i<PAINTS.length){garage.p=i;buildPlayer();beep(990);return;}}
     if(p.x<0.25)menu('left');else if(p.x>0.75)menu('right');else menu('ok');return;}
   if(state==='pit'){const i=Math.floor((py-(PIT_Y0-4))/PIT_DY);
@@ -1747,7 +1760,9 @@ screenEl.addEventListener('pointerdown',e=>{
     if(i>=0&&i<PARTS.length){if(shop.sel===i||e.pointerType==='mouse'){shop.sel=i;shopBuy();}else{shop.sel=i;beep(880);}}return;}
   startRun();
 });
-function ptrUp(e){if(e.pointerType==='mouse')fireHeld=false;if(activePtrs.has(e.pointerId)){activePtrs.delete(e.pointerId);refreshTouch();}}
+let lastTap={t:0,x:0,y:0};const swipe=new Map();
+function ptrUp(e){if(e.pointerType==='mouse')fireHeld=false;
+  const sw=swipe.get(e.pointerId);if(sw){swipe.delete(e.pointerId);if(state==='play'&&e.type==='pointerup'){const p=canvasPoint(e),dy=p.y*H-sw.y,dx=p.x*W-sw.x;if(dy>28&&Math.abs(dy)>Math.abs(dx)*1.5&&performance.now()-sw.t<500)buyGas();}}if(activePtrs.has(e.pointerId)){activePtrs.delete(e.pointerId);refreshTouch();}}
 screenEl.addEventListener('pointermove',e=>{
   if(e.pointerType==='mouse'){const p=canvasPoint(e);aimX=clamp(p.x*W,0,W);aimY=clamp(p.y*H,0,H);mouseAim=true;}
   if(activePtrs.has(e.pointerId)){activePtrs.set(e.pointerId,canvasPoint(e));refreshTouch();}
@@ -1801,7 +1816,8 @@ document.getElementById('fs-boost').addEventListener('pointerdown',e=>{e.prevent
 document.getElementById('fs-gas').addEventListener('click',e=>{e.stopPropagation();buyGas();});
 const tiltBtn=document.getElementById('fs-tilt');
 function tiltLabel(){tiltBtn.textContent=['TILT ON','TILT FLIP','TILT OFF'][tiltMode];}
-tiltLabel();tiltBtn.addEventListener('click',e=>{e.stopPropagation();requestTilt();tiltMode=(tiltMode+1)%3;store('sundown66-tilt',String(tiltMode));tiltLabel();showToast(['TILT STEERING ON','TILT FLIPPED','TILT OFF, HOLD SIDES TO STEER'][tiltMode]);});
+function cycleTilt(){requestTilt();tiltMode=(tiltMode+1)%3;store('sundown66-tilt',String(tiltMode));tiltLabel();showToast(['TILT STEERING ON','TILT FLIPPED','TILT OFF, HOLD SIDES TO STEER'][tiltMode]);beep(990);}
+tiltLabel();tiltBtn.addEventListener('click',e=>{e.stopPropagation();cycleTilt();});
 document.getElementById('fs-radio').addEventListener('click',e=>{e.stopPropagation();cycleRadio();});
 const sb=document.getElementById('b-sound');
 sb.addEventListener('click',()=>{muted=!muted;sb.textContent=muted?'SOUND OFF':'SOUND ON';sb.setAttribute('aria-pressed',String(!muted));if(master)master.gain.value=muted?0:0.5;cv.focus();});
@@ -1818,7 +1834,7 @@ function setFull(on){
 function toggleFull(){requestTilt();setFull(!isFull());}
 document.getElementById('b-full').addEventListener('click',toggleFull);
 document.getElementById('fs-exit').addEventListener('click',e=>{e.stopPropagation();setFull(false);});
-document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&isFull())setFull(false);});
+document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&isFull()&&!document.body.classList.contains('app'))setFull(false);});
 
 /* ---------- loop ---------- */
 let last=performance.now(),acc=0,aimCls=false;
@@ -1828,6 +1844,8 @@ function frame(now){acc+=Math.min(0.25,(now-last)/1000);last=now;while(acc>=step
 render();
 requestAnimationFrame(frame);
 if(window.SUNDOWN_APP){document.body.classList.add('app');touchDrive=true;requestTilt();setFull(true);}
+if(/[?&]desktop=1/.test(location.search)){document.body.classList.add('app','desktop');setFull(true);
+  window.addEventListener('keydown',e=>{if(e.code==='Escape'&&state==='title')window.close();});}
 })();
 </script>
 </body></html>
