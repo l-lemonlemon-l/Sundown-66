@@ -2,6 +2,8 @@
 
 A 70s-style, 32-bit pseudo-3D arcade road racer down Route 66, from Chicago to Santa Monica.
 
+Two modes: **Road Trip**, the solo run across the whole route, and **Race Friends**, online races for 2 to 4 players by room code, with one track for each of the eight states Route 66 crosses.
+
 Pick a car and paint in the garage, gear up in the armory with a main gun and a sidearm, then race the Baron town to town. You earn cash every second you stay ahead of him. Shoot out cop tires, dodge jaywalkers, buy gas on the fly, and drive into the night with the radio on. Cash, car parts and guns carry over between runs.
 
 ## Play
@@ -12,6 +14,15 @@ Pick a car and paint in the garage, gear up in the armory with a main gun and a 
 - **Android:** install `Sundown66-Android.apk`.
 
 Every version goes full screen when you start, with no on-screen buttons.
+
+## Race Friends
+
+1. On the title, pick Race Friends, then choose your car in the garage.
+2. One player picks Host a Race and reads out the 4-letter room code.
+3. Everyone else picks Join with a Code and enters it.
+4. The host picks a state (left and right) and starts the race.
+
+Windows, Mac, Android and the web version can all race each other; they connect through the free PeerJS service, so everyone needs internet. The copy inside Claude uses Claude's live rooms and only races other people viewing that page.
 
 ## Controls (touch)
 
@@ -55,3 +66,7 @@ Needs Node.js. Produces Windows (x64) and Mac (Apple Silicon and Intel) apps in 
 - `android/` holds the WebView wrapper, its manifest, icon and build script.
 - `desktop/` holds the Electron wrapper for Windows and Mac and its build script.
 - `CHANGELOG.md` lists what changed in each version.
+
+## Credits
+
+Online races use [PeerJS](https://peerjs.com) 1.5.4 (MIT license), included inside `index.html`.

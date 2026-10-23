@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.4.0 (2026-10-23)
+
+### Race Friends (online multiplayer)
+- New mode picker after the title: Road Trip (the solo game) or Race Friends.
+- Race Friends is online, 2 to 4 racers. One player hosts and gets a 4-letter room code; friends join by typing or tapping it in.
+- The host picks the track by state. Each of the eight Route 66 states is its own race with real start and end towns, its own stretch of road, scenery and time of day:
+  Illinois (Chicago to St Louis, 300 mi), Missouri (St Louis to Joplin, 280 mi), Kansas (Galena to Baxter Springs, 80 mi sprint), Oklahoma (Miami to Texola, 300 mi), Texas (Shamrock to Glenrio, 180 mi), New Mexico (Tucumcari to Gallup, 310 mi, dusk), Arizona (Holbrook to Kingman, 300 mi, night), California (Needles to Santa Monica, 300 mi, night).
+- 3-2-1-GO countdown for everyone, live standings and race timer on screen, name tags over the other racers' cars.
+- Results screen with finish times. Prize money: $150 for 1st, $75 for 2nd, $40 for 3rd, $20 for 4th, added to your wallet.
+- After the results everyone returns to the lobby and the host can start the next race. Players who join mid-race wait for the next one.
+- No cops, jaywalkers, Baron or fuel in races. Boosts work as usual (three, refilled every third town).
+- Clear messages for a wrong code, a full race, the host leaving, or no internet.
+
+### How players connect
+- Windows, Mac, Android and the web version connect through PeerJS (free public connection service, peer to peer), so all of them can race each other.
+- The copy published inside Claude connects through Claude's live rooms instead, so it races other people who have that page open. It cannot race the apps.
+
+### Builds
+- Android app 1.4, Windows and Mac apps 1.4.0, web `index.html`. PeerJS 1.5.4 (MIT license) is included in the page so the apps work without loading anything else.
+
 ## 1.3.1 (2026-10-22)
 
 - Android: tilt steering now reads the phone's gravity sensor directly in the app and sends it to the game, instead of relying on the browser motion events inside the app.
