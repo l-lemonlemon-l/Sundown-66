@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.0 (2026-10-23)
+
+- Aim assist: move the mouse near any wheel and the crosshair slides onto it and locks (red LOCKED brackets). E or a click fires at the locked wheel. With no mouse, E aims at the nearest wheel by itself. Touch keeps full auto aim and auto fire on cop tires.
+- Regular traffic can be shot. Two hits blow a car up with a fireball. Each one raises your heat by 1.5, so the cops come after you.
+- Infinite ammo. Every gun reloads in 5 seconds (Quick Hands mod: about 3.3 seconds).
+- Your driver leans out of the window toward the target, with a muzzle flash, every time you shoot.
+
 ## 1.4.2 (2026-10-23)
 
 - Quit with confirmation. Esc (keyboard), the Android back button, or a three-finger tap (touch) opens "ARE YOU SURE / YOU CANT UNDO THIS".
