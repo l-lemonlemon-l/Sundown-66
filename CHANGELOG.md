@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.6.0 (2026-10-23)
+
+- New Settings screen: press O or Tab on the title screen, or tap SETTINGS in the top right.
+- Remap every keyboard control, two keys each: steer left, steer right, gas, brake, boost, buy gas, fire, swap gun, radio, full screen. Choose a slot, press Enter, then press the new key. Backspace clears a slot. A key already in use moves to the new control and the screen says which one it came from.
+- Esc, Enter and Tab stay fixed so you can never lock yourself out of the menus. Arrow keys and WASD always move through menus.
+- Tilt steering (on, flipped, off), tilt sensitivity (low, normal, high) and sound on or off.
+- Reset to defaults. All settings are saved on the device.
+- On-screen key hints (title, buy gas, swap gun) show your own keys.
+
 ## 1.5.0 (2026-10-23)
 
 - Aim assist: move the mouse near any wheel and the crosshair slides onto it and locks (red LOCKED brackets). E or a click fires at the locked wheel. With no mouse, E aims at the nearest wheel by itself. Touch keeps full auto aim and auto fire on cop tires.

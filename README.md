@@ -36,6 +36,8 @@ Hold to gas, let go to brake, tilt to steer. Double-tap to boost, swipe down to 
 
 ## Controls (keyboard)
 
+These are the defaults. Change any of them in Settings (O or Tab on the title screen).
+
 | Key | Action |
 | --- | --- |
 | Arrows / WASD | Drive |

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.sundown66" android:versionCode="8" android:versionName="1.5.0">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.sundown66" android:versionCode="9" android:versionName="1.6.0">
   <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="35"/>
   <uses-permission android:name="android.permission.INTERNET"/>
   <application android:label="Sundown 66" android:icon="@drawable/icon" android:hardwareAccelerated="true" android:allowBackup="true" android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen">

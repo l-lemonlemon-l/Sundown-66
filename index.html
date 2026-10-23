@@ -177,7 +177,7 @@ body{
 
   <footer class="plate">
     <dl>
-      <div><dt>DRIVE</dt><dd>Arrows or WASD. Space or Enter to start. Esc quits the run or leaves the race, after asking. B or Shift uses a boost. You carry three, and they refill every third town. C buys gas ($6 for a fifth of a tank). R changes the radio. F for full screen.</dd></div>
+      <div><dt>DRIVE</dt><dd>Arrows or WASD (change any key in Settings: press O or Tab on the title, or tap SETTINGS). Space or Enter to start. Esc quits the run or leaves the race, after asking. B or Shift uses a boost. You carry three, and they refill every third town. C buys gas ($6 for a fifth of a tank). R changes the radio. F for full screen.</dd></div>
       <div><dt>SHOOT</dt><dd>Your driver leans out the window to shoot. Aim near any wheel and the crosshair locks on. Two hits blow up a regular car (and raise your heat). Infinite ammo, 5 second reload. Press E or click to fire at a cop's rear tires. Q swaps between your main gun and sidearm. On touch, FIRE aims for you and tapping the gun panel swaps.</dd></div>
       <div><dt>TOUCH</dt><dd>Hold to gas, let go to brake, tilt to steer. Double-tap to boost, swipe down to buy gas, two-finger tap for the radio, three-finger tap (or the Android back button) to quit. The crosshair aims and fires by itself.</dd></div>
       <div><dt>RACE FRIENDS</dt><dd>Pick Race Friends after the title. Host a race to get a 4-letter room code, or join with a friend's code. The host picks the state: Illinois, Missouri, Kansas, Oklahoma, Texas, New Mexico, Arizona or California. Top finishers win cash.</dd></div>
@@ -838,7 +838,7 @@ function autopilot(pSeg){
 
 /* ---------- update ---------- */
 function update(dt){
-  t+=dt;netTick(dt);lobby.msgT-=dt;peekT-=dt;
+  t+=dt;netTick(dt);lobby.msgT-=dt;setv.msgT-=dt;peekT-=dt;
   for(let i=BOOMS.length-1;i>=0;i--){BOOMS[i].life-=dt;if(BOOMS[i].life<=0)BOOMS.splice(i,1);}earnT-=dt;crashCD-=dt;overT+=dt;pit.msgT-=dt;shop.msgT-=dt;radioShowT-=dt;fireCD-=dt;toastT-=dt;flashT-=dt;armory.msgT-=dt;gunshop.msgT-=dt;
   for(const sl of ['main','side'])if(reloadT[sl]>0){reloadT[sl]-=dt;if(reloadT[sl]<=0){reloadT[sl]=0;ammo[sl]=gunStats(wallet.guns[sl]).mag;tone(900,0.05,'square',0.04);}}
   if(state==='play'&&fireHeld&&GUNS[curGun()].auto)fire(fireHeldAuto);
@@ -855,7 +855,7 @@ function update(dt){
   if(state==='play'){
     if(touchDrive){
       G=touchHold&&fuel>0;B=!touchHold&&boostT<=0;
-      if(tiltMode!==2&&tiltOK&&t-tiltSeen<1){const tv=tiltMode===1?-tiltVal:tiltVal,a=Math.abs(tv);steerAmt=a<2?0:Math.sign(tv)*Math.min(2.4,Math.pow((a-2)/10,1.25));}
+      if(tiltMode!==2&&tiltOK&&t-tiltSeen<1){const tv=tiltMode===1?-tiltVal:tiltVal,a=Math.abs(tv);steerAmt=a<2?0:Math.sign(tv)*Math.min(2.4,Math.pow((a-2)/SENS[sensIdx].d,1.25));}
       else if(touchHold)steerAmt=touchX<0.38?-1:touchX>0.62?1:0;
     }
     if(keys.left)steerAmt=-1;else if(keys.right)steerAmt=1;
@@ -1013,7 +1013,7 @@ function menu(a){
 }
 
 /* ---------- multiplayer racing: room codes, state tracks ---------- */
-const MENU_BG={title:1,garage:1,armory:1,mode:1,lobby:1,mpresult:1};
+const MENU_BG={title:1,garage:1,armory:1,mode:1,lobby:1,mpresult:1,settings:1};
 const STATES=[
   {name:'ILLINOIS',from:'CHICAGO',to:'ST LOUIS',start:0,len:300,seg:0,towns:'JOLIET, PONTIAC, SPRINGFIELD'},
   {name:'MISSOURI',from:'ST LOUIS',to:'JOPLIN',start:300,len:280,seg:310,towns:'ROLLA, THE OZARK HILLS'},
@@ -1536,7 +1536,7 @@ function hud(){
       if(copLive){const f=Math.floor(t*6)%2;txt(relD(cop.z)<0?'COP ON YOUR TAIL':'SHOOT HIS REAR TIRES',W/2,23,1,f?'#ff6a5a':'#8ab0ff','c');}}
     drawSpeedo(30,H-30,24,speed/maxSpeed*150);if(!mp.active)drawFuelGauge(80,H-17,16,fuel,blink);
     plate(W-50,H-18,46,14);txt('$'+Math.floor(cash),W-8,H-13,1,earnT>0&&blink?'#b8e08a':'#f2b631','r');if(earnT>0&&state==='play')txt('+',W-46,H-13,1,'#b8e08a');
-    if(state==='play'&&!mp.active)txt(touchDrive?'':'C GAS $'+GAS_PRICE,100,H-9,1,'#8a7a64');
+    if(state==='play'&&!mp.active)txt(touchDrive?'':bindName('buygas')+' GAS $'+GAS_PRICE,100,H-9,1,'#8a7a64');
     if(fuel===0&&state==='play'&&blink)txt('OUT OF GAS',W/2,H-30,2,'#ff5a4a','c');
     if(toastT>0&&state==='play')txt(toast,W/2,78,1,'#f2b631','c');
     if(state==='play'&&touchDrive){
@@ -1569,13 +1569,15 @@ function hud(){
     glyphs(ctx,s,x0+3,y0+3,k,'#b8401c');glyphs(ctx,s,x0+2,y0+2,k,'#e8641b');glyphs(ctx,s,x0+1,y0+1,k,'#f2b631');glyphs(ctx,s,x0,y0,k,'#f6e3b4');
     txt('CHICAGO TO SANTA MONICA',W/2,70,1,'#f6e3b4','c');
     if(blink)txt(touchDrive?'TAP TO START':'PRESS START',W/2,104,2,'#f2b631','c');
+    plate(W-80,8,74,13);txt(touchDrive?'SETTINGS':'O  SETTINGS',W-43,12,1,'#f6e3b4','c');
     txt('ROAD TRIP OR RACE FRIENDS ONLINE',W/2,86,1,'#8ab0ff','c');
     txt('BEST '+pad(best,4)+' MI     WALLET $'+Math.floor(cash),W/2,126,1,'#f6e3b4','c');
     if(touchDrive){txt('TILT TO STEER   HOLD TO GAS   LET GO TO BRAKE',W/2,136,1,'#f6e3b4','c');txt('DOUBLE TAP BOOST   SWIPE DOWN BUY GAS',W/2,145,1,'#f6e3b4','c');txt('TWO FINGER TAP RADIO   THREE FINGER TAP QUIT',W/2,154,1,'#f6e3b4','c');}
-    else txt('B BOOST   C GAS   Q SWAP   R RADIO   ESC QUIT',W/2,136,1,'#f6e3b4','c');
+    else txt(bindName('boost')+' BOOST   '+bindName('buygas')+' GAS   '+bindName('swap')+' SWAP   '+bindName('radio')+' RADIO   ESC QUIT',W/2,136,1,'#f6e3b4','c');
   }
   if(state==='play'&&quitAsk)drawQuit(blink);
   if(state!=='play')quitAsk=null;
+  if(state==='settings')drawSettings(blink);
   if(state==='mode')drawMode(blink);
   if(state==='lobby')drawLobby(blink);
   if(state==='mpresult')drawResults(blink);
@@ -1655,7 +1657,7 @@ function drawWeaponHud(){
   if(reloadT[slot]>0){const p=1-reloadT[slot]/g.reload;ctx.fillStyle='#3a2012';ctx.fillRect(x+4,y+11,72,3);ctx.fillStyle='#e8641b';ctx.fillRect(x+4,y+11,Math.round(72*p),3);txt('RELOAD',x+76,y+3,1,'#ff8a5a','r');}
   else if(g.mag<=16){for(let i=0;i<g.mag;i++){ctx.fillStyle=i<ammo[slot]?'#f2b631':'#3a2012';ctx.fillRect(x+4+i*4,y+10,2,5);}}
   else txt(ammo[slot]+'/'+g.mag,x+4,y+10,1,'#f2b631');
-  if(!touchDrive)txt('Q',x-6,y+6,1,'#8a7a64');
+  if(!touchDrive){const q=bindName('swap');txt(q,x-2-tw(q,1),y+6,1,'#8a7a64');}
 }
 const SHOP_Y0=38,SHOP_DY=10;
 function drawShop(){
@@ -2160,32 +2162,108 @@ function cycleRadio(){
 }
 
 /* ---------- input: keyboard ---------- */
-const KEYMAP={ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',ArrowUp:'gas',KeyW:'gas',ArrowDown:'brake',KeyS:'brake'};
+/* ---------- controls: remappable keys and settings ---------- */
+const ACTIONS=[['left','STEER LEFT'],['right','STEER RIGHT'],['gas','GAS'],['brake','BRAKE'],['boost','BOOST'],['buygas','BUY GAS'],['fire','FIRE'],['swap','SWAP GUN'],['radio','RADIO'],['full','FULL SCREEN']];
+const DEFAULT_BINDS={left:['ArrowLeft','KeyA'],right:['ArrowRight','KeyD'],gas:['ArrowUp','KeyW'],brake:['ArrowDown','KeyS'],boost:['KeyB','ShiftLeft'],buygas:['KeyC',''],fire:['KeyE',''],swap:['KeyQ',''],radio:['KeyR',''],full:['KeyF','']};
+let BINDS=JSON.parse(JSON.stringify(DEFAULT_BINDS));
+try{const sb0=JSON.parse(store('sundown66-keys')||'null');if(sb0&&typeof sb0==='object')for(const [a2] of ACTIONS)if(Array.isArray(sb0[a2]))BINDS[a2]=[0,1].map(i=>typeof sb0[a2][i]==='string'?sb0[a2][i].slice(0,24):'');}catch(e){}
+const RESERVED={Escape:1,Enter:1,Tab:1};
+const NAV={ArrowLeft:'left',ArrowRight:'right',ArrowUp:'up',ArrowDown:'down',KeyA:'left',KeyD:'right',KeyW:'up',KeyS:'down'};
+const SENS=[{n:'LOW',d:14},{n:'NORMAL',d:10},{n:'HIGH',d:6.5}];
+let sensIdx=clamp(parseInt(store('sundown66-sens'))||1,0,2);
+function actionOf(code){if(!code)return null;for(const [a2] of ACTIONS)if(BINDS[a2].includes(code))return a2;return null;}
+function bindName(a2){const b2=BINDS[a2];return keyName(b2[0]||b2[1]);}
+function saveBinds(){store('sundown66-keys',JSON.stringify(BINDS));}
+function keyName(c){if(!c)return'---';const m={ArrowLeft:'LEFT',ArrowRight:'RIGHT',ArrowUp:'UP',ArrowDown:'DOWN',Space:'SPACE',ShiftLeft:'L SHIFT',ShiftRight:'R SHIFT',ControlLeft:'L CTRL',ControlRight:'R CTRL',AltLeft:'L ALT',AltRight:'R ALT',MetaLeft:'L CMD',MetaRight:'R CMD',Backspace:'BKSP',CapsLock:'CAPS',Comma:',',Period:'.',Slash:'/',Minus:'-',Equal:'+',Delete:'DEL',Home:'HOME',End:'END',PageUp:'PG UP',PageDown:'PG DN',Insert:'INS'};
+  if(m[c])return m[c];if(/^Key[A-Z]$/.test(c))return c.slice(3);if(/^Digit\d$/.test(c))return c.slice(5);if(/^Numpad\d$/.test(c))return'NUM '+c.slice(6);if(/^F\d{1,2}$/.test(c))return c;return cleanName(c).slice(0,7);}
+let setv={row:0,col:0,wait:false,from:'title',msg:'',msgT:0};
+const SET_Y0=36,SET_DY=9,SET_OPT=ACTIONS.length,SET_ROWS=ACTIONS.length+5;
+function setRowY(i){return i<SET_OPT?SET_Y0+i*SET_DY:SET_Y0+SET_OPT*SET_DY+6+(i-SET_OPT)*10;}
+function setMsg(m){setv.msg=m;setv.msgT=2.2;}
+function openSettings(){setv={row:0,col:0,wait:false,from:state,msg:'',msgT:0};state='settings';beep(880);}
+function closeSettings(){setv.wait=false;state=setv.from==='settings'?'title':setv.from;beep(660);}
+function setSound(on){muted=!on;store('sundown66-sound',on?'1':'0');const b2=document.getElementById('b-sound');if(b2){b2.textContent=muted?'SOUND OFF':'SOUND ON';b2.setAttribute('aria-pressed',String(!muted));}if(master)master.gain.value=muted?0:0.5;}
+function settingsDo(a2){
+  const r=setv.row;
+  if(a2==='up'){setv.row=(r+SET_ROWS-1)%SET_ROWS;beep(880);return;}
+  if(a2==='down'){setv.row=(r+1)%SET_ROWS;beep(880);return;}
+  if(a2==='back'){closeSettings();return;}
+  if(r<SET_OPT){
+    if(a2==='left'||a2==='right'){setv.col=1-setv.col;beep(990);}
+    else if(a2==='ok'){setv.wait=true;beep(520);if(touchDrive)setMsg('NEEDS A KEYBOARD. PRESS ANY KEY');}
+    else if(a2==='clear'){BINDS[ACTIONS[r][0]][setv.col]='';saveBinds();setMsg('KEY CLEARED');beep(660);}
+    return;}
+  const o=r-SET_OPT,dir=a2==='left'?-1:1;
+  if(o===0&&(a2==='ok'||a2==='left'||a2==='right'))cycleTilt();
+  else if(o===1&&(a2==='ok'||a2==='left'||a2==='right')){sensIdx=(sensIdx+(a2==='left'?2:1))%3;store('sundown66-sens',String(sensIdx));beep(990);}
+  else if(o===2&&(a2==='ok'||a2==='left'||a2==='right')){setSound(muted);beep(990);}
+  else if(o===3&&a2==='ok'){BINDS=JSON.parse(JSON.stringify(DEFAULT_BINDS));saveBinds();sensIdx=1;store('sundown66-sens','1');setMsg('CONTROLS RESET TO DEFAULTS');jingle();}
+  else if(o===4&&a2==='ok')closeSettings();
+}
+function settingsKey(code){
+  if(setv.wait){
+    if(code==='Escape'){setv.wait=false;setMsg('NOT CHANGED');beep(660);return;}
+    if(RESERVED[code]){setMsg('ENTER, ESC AND TAB ARE RESERVED');beep(220);return;}
+    const a2=ACTIONS[setv.row][0],prev=actionOf(code);
+    for(const [b2] of ACTIONS)BINDS[b2]=BINDS[b2].map(c=>c===code?'':c);
+    BINDS[a2][setv.col]=code;saveBinds();setv.wait=false;
+    setMsg(prev&&prev!==a2?keyName(code)+' MOVED FROM '+ACTIONS.find(x=>x[0]===prev)[1]:ACTIONS[setv.row][1]+' IS NOW '+keyName(code));blip();return;}
+  const a2=NAV[code]||(code==='Enter'||code==='Space'?'ok':code==='Escape'?'back':(code==='Backspace'||code==='Delete')?'clear':null);
+  if(a2)settingsDo(a2);
+}
+function settingsTap(px,py){
+  if(py<24&&px<70){closeSettings();return;}
+  for(let i=0;i<SET_ROWS;i++){const y=setRowY(i);if(py>=y-2&&py<y+(i<SET_OPT?SET_DY-1:9)){setv.row=i;
+    if(i<SET_OPT){setv.col=px>=232?1:0;settingsDo('ok');}
+    else if(i-SET_OPT<3)settingsDo(px<W/2+40?'left':'right');else settingsDo('ok');return;}}
+}
+function drawSettings(blink){
+  ctx.fillStyle='rgba(22,12,9,0.9)';ctx.fillRect(0,0,W,H);stripes();
+  txt('< BACK',8,14,1,'#f2b631');txt('SETTINGS',W/2,13,2,'#f6e3b4','c');
+  txt('CONTROL',20,27,1,'#8a7a64');txt('KEY 1',196,27,1,'#8a7a64','c');txt('KEY 2',266,27,1,'#8a7a64','c');
+  for(let i=0;i<SET_ROWS;i++){const y=setRowY(i),on=setv.row===i;
+    if(on){ctx.fillStyle='rgba(242,182,49,0.12)';ctx.fillRect(12,y-2,W-24,i<SET_OPT?SET_DY:10);}
+    if(i<SET_OPT){const [a2,label]=ACTIONS[i];txt(label,20,y,1,on?'#f2b631':'#f6e3b4');
+      for(let c=0;c<2;c++){const x=166+c*70,sel=on&&setv.col===c;
+        if(sel){ctx.fillStyle=setv.wait?'rgba(200,32,43,0.35)':'rgba(242,182,49,0.25)';ctx.fillRect(x,y-2,60,SET_DY-1);}
+        const t2=sel&&setv.wait?(blink?'PRESS A KEY':''):keyName(BINDS[a2][c]);txt(t2,x+30,y,1,sel?'#fff2c0':(BINDS[a2][c]?'#cfc2a4':'#5a4a3a'),'c');}}
+    else{const o=i-SET_OPT,lab=['TILT STEERING','TILT SENSITIVITY','SOUND','RESET TO DEFAULTS','BACK'][o];
+      txt(lab,20,y,1,on?'#f2b631':(o===3?'#ff8a5a':'#f6e3b4'));
+      const val=o===0?['ON','FLIPPED','OFF'][tiltMode]:o===1?SENS[sensIdx].n:o===2?(muted?'OFF':'ON'):'';
+      if(val){txt(val,231,y,1,'#fff2c0','c');if(on&&blink){txt('<',176,y,1,'#f2b631');txt('>',284,y,1,'#f2b631');}}}}
+  if(setv.msgT>0)txt(setv.msg,W/2,178,1,'#ff8a5a','c');
+  txt(touchDrive?'TAP A ROW. KEYS NEED A KEYBOARD':'ENTER CHANGES   BKSP CLEARS   ESC BACK',W/2,190,1,'#8a7a64','c');
+}
 window.addEventListener('keydown',e=>{
+  if(state==='settings'){e.preventDefault();if(!e.repeat)settingsKey(e.code);return;}
   if(quitAsk&&state==='play'){e.preventDefault();if(e.repeat)return;
     const a={ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',ArrowUp:'up',KeyW:'up',ArrowDown:'down',KeyS:'down',Enter:'ok',Space:'ok',Escape:'back',Backspace:'back'}[e.code];
     if(a)quitMenu(a);return;}
   if(e.code==='Escape'&&state==='play'){e.preventDefault();if(!e.repeat)openQuit();return;}
   if(state==='lobby'&&lobby.view==='join'){if(/^Key[A-Z]$/.test(e.code)){e.preventDefault();joinType(e.code.slice(3));return;}if(e.code==='Backspace'){e.preventDefault();if(lobby.typed)joinDel();else mpMenu('back');return;}}
   if(e.code==='Escape'&&isFull()&&!document.body.classList.contains('app')&&(state==='title'||state==='play'||state==='over'||state==='win')){setFull(false);return;}
-  if(e.code==='KeyR'){cycleRadio();return;}
-  if(e.code==='KeyF'){toggleFull();return;}
-  if(e.code==='KeyE'){if(state==='play'){e.preventDefault();if(!e.repeat){fireHeld=true;fireHeldAuto=false;fire(false);}}return;}
-  if(e.code==='KeyB'||e.code==='ShiftLeft'||e.code==='ShiftRight'){if(state==='play'){e.preventDefault();if(!e.repeat)useBoost();}return;}
-  if(e.code==='KeyC'){if(state==='play'){e.preventDefault();if(!e.repeat)buyGas();}return;}
-  if(e.code==='KeyQ'){if(state==='play'){e.preventDefault();if(!e.repeat)swapGun();}return;}
+  if((e.code==='KeyO'||e.code==='Tab')&&(state==='title'||state==='mode'||state==='over'||state==='win')){e.preventDefault();openSettings();return;}
+  const act=actionOf(e.code);
+  if(state==='play'&&!e.repeat){
+    if(act==='fire'){e.preventDefault();fireHeld=true;fireHeldAuto=false;fire(false);return;}
+    if(act==='boost'){e.preventDefault();useBoost();return;}
+    if(act==='buygas'){e.preventDefault();buyGas();return;}
+    if(act==='swap'){e.preventDefault();swapGun();return;}
+  }
+  if(act==='radio'&&!e.repeat){cycleRadio();return;}
+  if(act==='full'&&!e.repeat){toggleFull();return;}
   if(e.code==='KeyM'){if(menu('mods'))e.preventDefault();return;}
   if(e.code==='KeyP'){if(menu('shop'))e.preventDefault();return;}
-  const k=KEYMAP[e.code];
+  const k=(act==='left'||act==='right'||act==='gas'||act==='brake')?act:null;
   const isOk=(e.code==='Space'||e.code==='Enter')&&!(e.target instanceof HTMLButtonElement);
   if(state==='garage'||state==='armory'||state==='gunshop'||state==='pit'||state==='shop'||state==='cut'||state==='pullin'||state==='pump'||state==='mode'||state==='lobby'||state==='mpresult'){
-    const a=k?{left:'left',right:'right',gas:'up',brake:'down'}[k]:isOk?'ok':(e.code==='Escape'||e.code==='Backspace')?'back':null;
+    const a=k?{left:'left',right:'right',gas:'up',brake:'down'}[k]:NAV[e.code]?NAV[e.code]:isOk?'ok':(e.code==='Escape'||e.code==='Backspace')?'back':null;
     if(a){e.preventDefault();if(!e.repeat)menu(state==='cut'&&a==='up'?'ok':a);}
     return;}
   if(k){touchDrive=false;keys[k]=true;e.preventDefault();if(k==='gas'&&state!=='play')startRun();return;}
   if(isOk){e.preventDefault();startRun();}
 });
-window.addEventListener('keyup',e=>{if(e.code==='KeyE')fireHeld=false;const k=KEYMAP[e.code];if(k)keys[k]=false;});
+window.addEventListener('keyup',e=>{const a2=actionOf(e.code);if(a2==='fire')fireHeld=false;if(a2&&a2 in keys)keys[a2]=false;});
 window.addEventListener('blur',()=>{for(const k in keys)keys[k]=false;touchHold=false;fireHeld=false;});
 
 /* ---------- input: pointer on the screen ---------- */
@@ -2212,6 +2290,8 @@ screenEl.addEventListener('pointerdown',e=>{
     }
     if(e.pointerType==='mouse'){mouseX=px;mouseY=py;if(!lock){aimX=px;aimY=py;}mouseAim=true;fireHeld=true;fireHeldAuto=false;fire(false);try{screenEl.setPointerCapture(e.pointerId);}catch(_){}return;}
     activePtrs.set(e.pointerId,p);refreshTouch();try{screenEl.setPointerCapture(e.pointerId);}catch(_){}return;}
+  if(state==='settings'){settingsTap(px,py);return;}
+  if((state==='title'||state==='over'||state==='win')&&py<24&&px>W-84){openSettings();return;}
   if(mpPointer(px,py))return;
   if(state==='cut'){endCut();return;}
   if(state==='pullin'){endPullin();return;}
@@ -2306,7 +2386,8 @@ function cycleTilt(){requestTilt();tiltMode=(tiltMode+1)%3;store('sundown66-tilt
 tiltLabel();tiltBtn.addEventListener('click',e=>{e.stopPropagation();cycleTilt();});
 document.getElementById('fs-radio').addEventListener('click',e=>{e.stopPropagation();cycleRadio();});
 const sb=document.getElementById('b-sound');
-sb.addEventListener('click',()=>{muted=!muted;sb.textContent=muted?'SOUND OFF':'SOUND ON';sb.setAttribute('aria-pressed',String(!muted));if(master)master.gain.value=muted?0:0.5;cv.focus();});
+if(store('sundown66-sound')==='0'){muted=true;sb.textContent='SOUND OFF';sb.setAttribute('aria-pressed','false');}
+sb.addEventListener('click',()=>{muted=!muted;store('sundown66-sound',muted?'0':'1');sb.textContent=muted?'SOUND OFF':'SOUND ON';sb.setAttribute('aria-pressed',String(!muted));if(master)master.gain.value=muted?0:0.5;cv.focus();});
 
 /* ---------- full screen ---------- */
 function isFull(){return screenEl.classList.contains('full');}
