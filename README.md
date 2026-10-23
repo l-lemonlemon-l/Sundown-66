@@ -68,7 +68,7 @@ Needs Node.js. Produces Windows (x64) and Mac (Apple Silicon and Intel) apps in 
 
 ## Releases
 
-Pushing a version tag (for example `git tag v1.4.1 && git push --tags`) makes GitHub build every version on its own Windows, Mac and Linux machines and attach them to a release: `.github/workflows/release.yml`.
+Publishing a release on GitHub (Releases, then Draft a new release, with a new tag such as `v1.4.2`) makes GitHub build every version on its own Windows, Mac and Linux machines and attach them to that release: `.github/workflows/release.yml`. The builds take about 10 minutes to appear.
 
 - The Mac app is built and signed on a real Mac. Without Apple secrets it is signed ad hoc, which installs cleanly through `install-mac.sh`.
 - To make the Mac app open with a plain double-click from any download, join the Apple Developer Program and add these repository secrets: `MAC_CERT_P12_BASE64`, `MAC_CERT_PASSWORD`, `APPLE_ID`, `APPLE_APP_PASSWORD`, `APPLE_TEAM_ID`. The build then signs with your Developer ID and has Apple notarize it.

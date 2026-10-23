@@ -7,6 +7,7 @@
   - Race Friends: the race keeps going for everyone else. Yes, leave takes you out of the race and the room.
 - Android back button steps back through menus and closes the app from the title screen.
 - Repo renamed to Sundown-66; install script and links updated.
+- Release builds now start when a release is published on GitHub, and attach the Windows, Mac and Android files to it.
 
 ## 1.4.1 (2026-10-23)
 
