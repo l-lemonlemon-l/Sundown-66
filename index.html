@@ -1082,6 +1082,9 @@ function hud(){
     if(state==='play')txt(touchDrive?'':'C GAS $'+GAS_PRICE,100,H-9,1,'#8a7a64');
     if(fuel===0&&state==='play'&&blink)txt('OUT OF GAS',W/2,H-30,2,'#ff5a4a','c');
     if(toastT>0&&state==='play')txt(toast,W/2,78,1,'#f2b631','c');
+    if(state==='play'&&touchDrive){
+      if(tiltMode===2)txt('TILT OFF: HOLD LEFT OR RIGHT TO STEER',W/2,31,1,'#ff8a5a','c');
+      else if(!tiltOK||t-tiltSeen>1)txt('NO TILT SENSOR: HOLD LEFT OR RIGHT TO STEER',W/2,31,1,'#ff8a5a','c');}
     if(state==='play'){drawWeaponHud();
       plate(W-50,H-55,46,15);txt('BOOST',W-46,H-51,1,'#f6e3b4');{const left=3-(townIdx%3);txt('REFILL IN '+left,W-6,H-62,1,'#8a7a64','r',false);}
       for(let i=0;i<BOOST_CHARGES;i++){const x=W-21+i*5,on=i<boostCharges;ctx.fillStyle=on?'#ff8a1a':'#3a2012';ctx.fillRect(x,H-51,3,5);if(on){ctx.fillStyle='#ffd27a';ctx.fillRect(x+1,H-50,1,2);}}}
@@ -1127,7 +1130,7 @@ function drawGarage(blink){
   ctx.fillStyle='rgba(22,12,9,0.8)';ctx.fillRect(0,0,W,H);
   ctx.fillStyle='#f2b631';ctx.fillRect(0,0,W,3);ctx.fillStyle='#e8641b';ctx.fillRect(0,3,W,3);ctx.fillStyle='#b8401c';ctx.fillRect(0,6,W,3);
   txt('$'+Math.floor(cash),8,14,1,'#f2b631');
-  if(touchDrive)txt(['TILT: ON','TILT: FLIP','TILT: OFF'][tiltMode],8,22,1,'#8ab0ff');
+  if(touchDrive){plate(4,19,62,12);txt(['TILT ON','TILT FLIPPED','TILT OFF'][tiltMode],35,22,1,tiltMode===2?'#ff8a5a':'#8ab0ff','c');}
   plate(W-62,11,56,13);txt(touchDrive?'PARTS':'P  PARTS',W-34,15,1,'#f6e3b4','c');
   txt('GARAGE',W/2,14,2,'#f6e3b4','c');
   const m=MODELS[garage.m];
@@ -1739,7 +1742,7 @@ screenEl.addEventListener('pointerdown',e=>{
   if(state==='pump'){endPump();return;}
   if(state==='garage'){
     if(py<26&&px>W-66){openShop('garage');return;}
-    if(py<30&&px<80){cycleTilt();return;}
+    if(py>=17&&py<34&&px<70){cycleTilt();return;}
     if(py>=128&&py<=144){const i=Math.floor((px-(W/2-PAINTS.length*7)+2)/14);if(i>=0&&i<PAINTS.length){garage.p=i;buildPlayer();beep(990);return;}}
     if(p.x<0.25)menu('left');else if(p.x>0.75)menu('right');else menu('ok');return;}
   if(state==='pit'){const i=Math.floor((py-(PIT_Y0-4))/PIT_DY);
@@ -1771,13 +1774,20 @@ screenEl.addEventListener('pointerup',ptrUp);screenEl.addEventListener('pointerc
 screenEl.addEventListener('contextmenu',e=>e.preventDefault());
 
 /* ---------- input: tilt (works where the browser allows motion sensors) ---------- */
-let tiltAsked=false,motionOK=false,tiltMode=parseInt(store('sundown66-tilt'))||0;
-function onMotion(e){
-  const g=e.accelerationIncludingGravity;if(!g||g.x==null||g.y==null)return;
-  if(Math.hypot(g.x,g.y)<2.5)return;
-  const ang=(screen.orientation&&typeof screen.orientation.angle==='number')?screen.orientation.angle:(window.orientation||0);
-  let v;if(ang===90)v=Math.atan2(g.y,g.x);else if(ang===270||ang===-90)v=Math.atan2(-g.y,-g.x);else if(ang===180)v=Math.atan2(g.x,-g.y);else v=Math.atan2(-g.x,g.y);
+let tiltAsked=false,motionOK=false,tiltMode=parseInt(store('sundown66-tilt-v2'))||0;
+let nativeTilt=false;
+function applyGravity(gx,gy,ang){
+  if(Math.hypot(gx,gy)<2.5)return;
+  let v;if(ang===90)v=Math.atan2(gy,gx);else if(ang===270||ang===-90)v=Math.atan2(-gy,-gx);else if(ang===180)v=Math.atan2(gx,-gy);else v=Math.atan2(-gx,gy);
   tiltVal=v*180/Math.PI;tiltSeen=t;tiltOK=true;motionOK=true;
+}
+/* the Android app calls this with the phone's gravity sensor and the screen rotation */
+window.__nativeTilt=function(gx,gy,ang){nativeTilt=true;applyGravity(gx,gy,ang);};
+function onMotion(e){
+  if(nativeTilt)return;
+  const g=e.accelerationIncludingGravity;if(!g||g.x==null||g.y==null)return;
+  const ang=(screen.orientation&&typeof screen.orientation.angle==='number')?screen.orientation.angle:(window.orientation||0);
+  applyGravity(g.x,g.y,ang);
 }
 function onOrient(e){
   if(motionOK)return;
@@ -1816,7 +1826,7 @@ document.getElementById('fs-boost').addEventListener('pointerdown',e=>{e.prevent
 document.getElementById('fs-gas').addEventListener('click',e=>{e.stopPropagation();buyGas();});
 const tiltBtn=document.getElementById('fs-tilt');
 function tiltLabel(){tiltBtn.textContent=['TILT ON','TILT FLIP','TILT OFF'][tiltMode];}
-function cycleTilt(){requestTilt();tiltMode=(tiltMode+1)%3;store('sundown66-tilt',String(tiltMode));tiltLabel();showToast(['TILT STEERING ON','TILT FLIPPED','TILT OFF, HOLD SIDES TO STEER'][tiltMode]);beep(990);}
+function cycleTilt(){requestTilt();tiltMode=(tiltMode+1)%3;store('sundown66-tilt-v2',String(tiltMode));tiltLabel();showToast(['TILT STEERING ON','TILT FLIPPED','TILT OFF, HOLD SIDES TO STEER'][tiltMode]);beep(990);}
 tiltLabel();tiltBtn.addEventListener('click',e=>{e.stopPropagation();cycleTilt();});
 document.getElementById('fs-radio').addEventListener('click',e=>{e.stopPropagation();cycleRadio();});
 const sb=document.getElementById('b-sound');

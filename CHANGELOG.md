@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.1 (2026-10-22)
+
+- Android: tilt steering now reads the phone's gravity sensor directly in the app and sends it to the game, instead of relying on the browser motion events inside the app.
+- Tilt setting reset to ON (an old OFF or FLIP choice from the 1.2 corner button could stick after the button was removed).
+- Garage shows the tilt setting as a tappable plate at the top left.
+- While driving on touch, a warning line appears if tilt is off or no sensor data is coming in, and holding left or right of the screen steers instead.
+
 ## 1.3.0 (2026-10-22)
 
 ### Builds
