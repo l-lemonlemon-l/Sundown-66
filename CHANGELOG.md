@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.1 (2026-10-23)
+
+- Fixed macOS calling the app "damaged". Mac builds are now made on a real Mac by GitHub Actions and signed there (`desktop/build-mac.js`), instead of being packaged on Linux where they cannot be signed.
+- New one-line Mac installer, `install-mac.sh`: downloads the right build, installs it to Applications and opens it with no security warnings.
+- Optional full Apple signing and notarization: add a Developer ID certificate and Apple ID secrets to the repo and Mac builds open with a double-click from any download.
+- New release workflow builds Windows, Mac and Android on every version tag and attaches them to a GitHub release.
+
 ## 1.4.0 (2026-10-23)
 
 ### Race Friends (online multiplayer)

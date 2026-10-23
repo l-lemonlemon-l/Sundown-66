@@ -10,7 +10,13 @@ Pick a car and paint in the garage, gear up in the armory with a main gun and a 
 
 - **Web:** open `index.html` in a browser, or turn on GitHub Pages for this repo and play at the Pages link.
 - **Windows:** unzip `Sundown66-Windows.zip` and run `Sundown 66.exe`.
-- **Mac:** unzip the Apple Silicon or Intel zip and open `Sundown 66.app`. The first time, right-click it and choose Open.
+- **Mac:** paste this into Terminal. It picks Apple Silicon or Intel, installs to Applications and opens the game, with no security warnings:
+
+  ```
+  curl -fsSL https://raw.githubusercontent.com/l-lemonlemon-l/sundown-66/main/install-mac.sh | bash
+  ```
+
+  If you download the zip in a browser instead, macOS may call the app damaged. Fix it with `xattr -cr "/Applications/Sundown 66.app"`, or see Releases below for the fully signed option.
 - **Android:** install `Sundown66-Android.apk`.
 
 Every version goes full screen when you start, with no on-screen buttons.
@@ -60,11 +66,21 @@ cd desktop
 
 Needs Node.js. Produces Windows (x64) and Mac (Apple Silicon and Intel) apps in `desktop/dist/`.
 
+## Releases
+
+Pushing a version tag (for example `git tag v1.4.1 && git push --tags`) makes GitHub build every version on its own Windows, Mac and Linux machines and attach them to a release: `.github/workflows/release.yml`.
+
+- The Mac app is built and signed on a real Mac. Without Apple secrets it is signed ad hoc, which installs cleanly through `install-mac.sh`.
+- To make the Mac app open with a plain double-click from any download, join the Apple Developer Program and add these repository secrets: `MAC_CERT_P12_BASE64`, `MAC_CERT_PASSWORD`, `APPLE_ID`, `APPLE_APP_PASSWORD`, `APPLE_TEAM_ID`. The build then signs with your Developer ID and has Apple notarize it.
+- Add `ANDROID_KEYSTORE_BASE64` so every Android build is signed with the same key and updates install over older versions.
+
 ## Layout
 
 - `index.html` is the whole game in one file: HTML, CSS and JavaScript, no dependencies.
 - `android/` holds the WebView wrapper, its manifest, icon and build script.
-- `desktop/` holds the Electron wrapper for Windows and Mac and its build script.
+- `desktop/` holds the Electron wrapper for Windows and Mac, its build scripts and the Mac entitlements.
+- `install-mac.sh` is the one-line Mac installer.
+- `.github/workflows/release.yml` builds and publishes every version.
 - `CHANGELOG.md` lists what changed in each version.
 
 ## Credits
